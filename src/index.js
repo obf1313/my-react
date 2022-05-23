@@ -1,12 +1,13 @@
 /**
- * @description: 构造 DOM 节点，渲染使用 Fiber，可以使用函数组件。
+ * @description: 构造 DOM 节点，渲染使用 Fiber，可以使用函数组件，且能使用带状态的如 useState。
  * https://pomb.us/build-your-own-react/
  * @author: cnn
  * @createTime: 2022/5/22 22:41
  **/
 const Didact = {
 	createElement,
-	render
+	render,
+	useState
 };
 
 function createElement(type, props, ...children) {
@@ -252,8 +253,17 @@ function performUnitOfWork(fiber) {
 	}
 	// 都没了就不返回了
 }
+// 当前运行的 fiber
+let wipFiber = null;
+let hookIndex = null;
 // 处理函数组件
 function updateFunctionComponent(fiber) {
+// 当前运行的 fiber
+	wipFiber = fiber;
+	// hookIndex 追踪当前的 hook Index
+	hookIndex = 0;
+	// 给 fiber 添加 hooks 数组支持同时建立多个 useState 在一个组件中。
+	wipFiber.hooks = [];
 	// 获取 children，为什么这么取？todo 是因为 JSX 解析吗
 	// 那里能证明 type 是我们的 App Function，因为标签是 App 吗。
 	// 在我们的例子中，fiber.type 是 App Function，当我们 run 它的时候，将会返回 h1 element。
@@ -261,6 +271,41 @@ function updateFunctionComponent(fiber) {
 	const children = [fiber.type(fiber.props)];
 	reconcileChildren(fiber, children);
 	// 注意，函数节点没有建立 dom 节点。
+}
+function useState(initial) {
+	// 当函数组件调用 useState 我们检查是否有旧的 hook。
+	const oldHook = wipFiber.alternate && wipFiber.alternate.hooks && wipFiber.alternate.hooks[hookIndex];
+	// 如果有，我们直接使用 state 值，没有就使用初始值。
+	const hook = {
+		state: oldHook ? oldHook.state : initial,
+		queue: []
+	};
+	// 但是我们还没有运行 action。
+	// 我们在下一次渲染组件时运行，我们从 hook.queue 中获取所有的 actions
+	// 然后依次运行它们以获得新的值，所以当我们返回 state 的时候它们已经更新了。
+	// useState 也应该返回一个函数去更新其值，所以我们定义 setState 函数，接收一个 action。
+	const actions = oldHook ? oldHook.queue : [];
+	actions.forEach(action =>{
+		hook.state = action(hook.state);
+	});
+	const setState = action => {
+		// 我们将 action push 进 hook.queue 中。
+		hook.queue.push(action);
+		// 然后我们做一些在 render 中做的相同的事情
+		// 设置一个新的 work 在 progress root 作为下一个工作单元
+		// 所以 work loop 可以开始一次新的渲染阶段
+		wipRoot = {
+			dom: currentRoot.dom,
+			props: currentRoot.props,
+			alternate: currentRoot
+		};
+		nextUnitOfWork = wipRoot;
+		deletions = [];
+	};
+	wipFiber.hooks.push(hook);
+	hookIndex++;
+	// 然后我们将新的 hook 添加到 fiber 中，将 hookIndex 加 1，然后返回 state。
+	return [hook.state, setState];
 }
 // 处理普通组件
 function updateHostComponent(fiber) {
@@ -333,28 +378,14 @@ function reconcileChildren(wipFiber, elements) {
 // ----------------------------------使用--------------------------------------
 /** @jsxRuntime classic */
 /** @jsx Didact.createElement */
-// 我们实际上要做的事
-// function App(props) {
-//   return Didact.createElement(
-//     "h1",
-//     null,
-//     "Hi ",
-//     props.name
-//   )
-// }
-function App(props) {
+function Counter() {
+	const [state, setState] = Didact.useState(1);
 	return (
-		<div>
-			<h1>Hi {props.name}</h1>
-			<h1>Hi {props.name}</h1>
-			<h1>Hi {props.name}</h1>
-		</div>
-	);
+		<h1 onClick={() => setState(c => c + 1)}>
+			Count: { state }
+		</h1>
+	)
 }
-// 我们实际上要做的事
-// const element = Didact.createElement(App, {
-//   name: "foo",
-// })
-const element = <App name="foo" />;
+const element = <Counter />;
 const container = document.getElementById('root');
 Didact.render(element, container);
