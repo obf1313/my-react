@@ -168,20 +168,20 @@ function commitWork(fiber) {
 		return;
 	}
 	// 现在我们有一些 fibers（函数组件节点）没有 DOM nodes，我们需要改两点。
-	// 首先，要找 parent DOM 节点，我们需要向上回溯 fiber tree
-	// 直到我们找到一个 fiber 有 DOM node。
+  // 首先，要找 parent DOM 节点，我们需要向上回溯 fiber tree
+  // 直到我们找到一个 fiber 有 DOM node。
 	// const domParent = fiber.parent.dom;
-	let domParentFiber = fiber.parent;
+  let domParentFiber = fiber.parent;
 	while (!domParentFiber.dom) {
-		domParentFiber = domParentFiber.parent;
-	}
+	  domParentFiber = domParentFiber.parent;
+  }
 	const domParent = domParentFiber.dom;
 	// 创建新节点
 	if (fiber.effectTag === 'PLACEMENT' && fiber.dom != null) {
 		domParent.appendChild(fiber.dom);
 	} else if (fiber.effectTag === 'DELETION') {
-		// 当我们移除节点时我们也需要向下找到 child 有 DOM node 的。
-		commitDeletion(fiber, domParent);
+	  // 当我们移除节点时我们也需要向下找到 child 有 DOM node 的。
+    commitDeletion(fiber, domParent);
 		// domParent.removeChild(fiber.dom);
 	} else if (fiber.effectTag === 'UPDATE' && fiber.dom != null) {
 		updateDom(fiber.dom, fiber.alternate.props, fiber.props);
@@ -190,11 +190,11 @@ function commitWork(fiber) {
 	commitWork(fiber.sibling);
 }
 function commitDeletion(fiber, domParent) {
-	if (fiber.dom) {
+  if (fiber.dom) {
 		domParent.removeChild(fiber.dom);
-	} else {
-		commitDeletion(fiber.child, domParent);
-	}
+  } else {
+    commitDeletion(fiber.child, domParent);
+  }
 }
 // 在 render 函数中，我们将创建 root fiber，然后设置它为 nextUnitWork。
 function render(element, container) {
@@ -227,15 +227,15 @@ function render(element, container) {
 // 3. 选择下一个工作单元。
 // 执行工作单元，且返回下一工作单元
 function performUnitOfWork(fiber) {
-	// 处理函数组件
-	// 1. 函数组件的 fiber 没有 DOM node，即 fiber.dom 并不是真的 dom。
-	// 2. 函数组件的 children 也不是直接从 props 中直接取的。
-	const isFunctionComponent = fiber.type instanceof Function;
-	if (isFunctionComponent) {
-		updateFunctionComponent(fiber);
-	} else {
-		updateHostComponent(fiber);
-	}
+  // 处理函数组件
+  // 1. 函数组件的 fiber 没有 DOM node，即 fiber.dom 并不是真的 dom。
+  // 2. 函数组件的 children 也不是直接从 props 中直接取的。
+  const isFunctionComponent = fiber.type instanceof Function;
+  if (isFunctionComponent) {
+    updateFunctionComponent(fiber);
+  } else {
+    updateHostComponent(fiber);
+  }
 	// 3. 返回下一个工作单元
 	// 有儿子返回儿子
 	if (fiber.child) {
@@ -254,13 +254,13 @@ function performUnitOfWork(fiber) {
 }
 // 处理函数组件
 function updateFunctionComponent(fiber) {
-	// 获取 children，为什么这么取？todo 是因为 JSX 解析吗
-	// 那里能证明 type 是我们的 App Function，因为标签是 App 吗。
-	// 在我们的例子中，fiber.type 是 App Function，当我们 run 它的时候，将会返回 h1 element。
-	// 所以当我们得到 children 时，将会以之前的方式同样操作。
-	const children = [fiber.type(fiber.props)];
-	reconcileChildren(fiber, children);
-	// 注意，函数节点没有建立 dom 节点。
+  // 获取 children，为什么这么取？todo 是因为 JSX 解析吗
+  // 那里能证明 type 是我们的 App Function，因为标签是 App 吗。
+  // 在我们的例子中，fiber.type 是 App Function，当我们 run 它的时候，将会返回 h1 element。
+  // 所以当我们得到 children 时，将会以之前的方式同样操作。
+  const children = [fiber.type(fiber.props)];
+  reconcileChildren(fiber, children);
+  // 注意，函数节点没有建立 dom 节点。
 }
 // 处理普通组件
 function updateHostComponent(fiber) {
@@ -329,7 +329,12 @@ function reconcileChildren(wipFiber, elements) {
 		index++;
 	}
 }
-// 实现 Hooks，让我们的函数组件能够拥有状态。
+
+// 实现函数组件
+// 函数组件实际有两点不同
+// 1. 函数组件的 fiber 没有 DOM node，即 fiber.dom 并不是真的 dom。
+// 2. 函数组件的 children 也不是直接从 props 中直接取的。
+
 // ----------------------------------使用--------------------------------------
 /** @jsxRuntime classic */
 /** @jsx Didact.createElement */
@@ -343,13 +348,7 @@ function reconcileChildren(wipFiber, elements) {
 //   )
 // }
 function App(props) {
-	return (
-		<div>
-			<h1>Hi {props.name}</h1>
-			<h1>Hi {props.name}</h1>
-			<h1>Hi {props.name}</h1>
-		</div>
-	);
+  return <h1>Hi {props.name}</h1>;
 }
 // 我们实际上要做的事
 // const element = Didact.createElement(App, {

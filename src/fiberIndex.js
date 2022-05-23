@@ -1,9 +1,29 @@
 /**
- * @description: 构造 DOM 节点，渲染使用 Fiber，可以使用函数组件。
+ * @description: 构造 DOM 节点，渲染使用 Fiber
  * https://pomb.us/build-your-own-react/
  * @author: cnn
  * @createTime: 2022/5/22 22:41
  **/
+// 流程
+// const element = {
+// 	type: 'h1', // 标签名称
+// 	props: {
+// 		title: 'foo',
+// 		children: 'Hello'
+// 	}
+// };
+//
+// const container = document.getElementById('root');
+// const node = document.createElement(element.type);
+// node['title'] = element.props.title;
+//
+// const text = document.createTextNode('');
+// text['nodeValue'] = element.props.children;
+//
+// node.appendChild(text);
+// container.appendChild(node);
+
+// --------------------------------------------------------------------------------------
 const Didact = {
 	createElement,
 	render
@@ -167,34 +187,17 @@ function commitWork(fiber) {
 	if (!fiber) {
 		return;
 	}
-	// 现在我们有一些 fibers（函数组件节点）没有 DOM nodes，我们需要改两点。
-	// 首先，要找 parent DOM 节点，我们需要向上回溯 fiber tree
-	// 直到我们找到一个 fiber 有 DOM node。
-	// const domParent = fiber.parent.dom;
-	let domParentFiber = fiber.parent;
-	while (!domParentFiber.dom) {
-		domParentFiber = domParentFiber.parent;
-	}
-	const domParent = domParentFiber.dom;
+	const domParent = fiber.parent.dom;
 	// 创建新节点
 	if (fiber.effectTag === 'PLACEMENT' && fiber.dom != null) {
 		domParent.appendChild(fiber.dom);
 	} else if (fiber.effectTag === 'DELETION') {
-		// 当我们移除节点时我们也需要向下找到 child 有 DOM node 的。
-		commitDeletion(fiber, domParent);
-		// domParent.removeChild(fiber.dom);
+		domParent.removeChild(fiber.dom);
 	} else if (fiber.effectTag === 'UPDATE' && fiber.dom != null) {
 		updateDom(fiber.dom, fiber.alternate.props, fiber.props);
 	}
 	commitWork(fiber.child);
 	commitWork(fiber.sibling);
-}
-function commitDeletion(fiber, domParent) {
-	if (fiber.dom) {
-		domParent.removeChild(fiber.dom);
-	} else {
-		commitDeletion(fiber.child, domParent);
-	}
 }
 // 在 render 函数中，我们将创建 root fiber，然后设置它为 nextUnitWork。
 function render(element, container) {
@@ -227,15 +230,43 @@ function render(element, container) {
 // 3. 选择下一个工作单元。
 // 执行工作单元，且返回下一工作单元
 function performUnitOfWork(fiber) {
-	// 处理函数组件
-	// 1. 函数组件的 fiber 没有 DOM node，即 fiber.dom 并不是真的 dom。
-	// 2. 函数组件的 children 也不是直接从 props 中直接取的。
-	const isFunctionComponent = fiber.type instanceof Function;
-	if (isFunctionComponent) {
-		updateFunctionComponent(fiber);
-	} else {
-		updateHostComponent(fiber);
+	if (!fiber.dom) {
+		// 1. 首先创建一个新的 node，然后将其加入 DOM 中
+		// 我们保留这个 DOM node 在 fiber.dom 属性中
+		fiber.dom = createDom(fiber);
 	}
+	// 但这里又有个问题
+	// 我们没工作一次就添加一次节点到 DOM，但是浏览器会干扰，这种情况下
+	// 用户会看到不完整的 UI，这并非我们想看到的
+	// 所以我们需要移除以下部分，在 commit 时再进行渲染
+	// if (fiber.parent) {
+	// 	fiber.parent.dom.appendChild(fiber.dom);
+	// }
+	// 然后对每一个孩子创建新 fiber
+	const elements = fiber.props.children;
+	reconcileChildren(fiber, elements);
+	// let index = 0;
+	// // 上一个孩子的兄弟
+	// let prevSibling = null;
+	// while (index < elements.length) {
+	// 	const element = elements[index];
+	// 	const newFiber = {
+	// 		type: element.type,
+	// 		props: element.props,
+	// 		parent: fiber,
+	// 		dom: null
+	// 	};
+	// 	// 第一个儿子作为儿子
+	// 	if (index === 0) {
+	// 		fiber.child = newFiber;
+	// 	}
+	// 	// 之后的都是作为上一个孩子的兄弟
+	// 	else {
+	// 		prevSibling.sibling = newFiber;
+	// 	}
+	// 	prevSibling = newFiber;
+	// 	index++;
+	// }
 	// 3. 返回下一个工作单元
 	// 有儿子返回儿子
 	if (fiber.child) {
@@ -251,24 +282,6 @@ function performUnitOfWork(fiber) {
 		nextFiber = nextFiber.parent;
 	}
 	// 都没了就不返回了
-}
-// 处理函数组件
-function updateFunctionComponent(fiber) {
-	// 获取 children，为什么这么取？todo 是因为 JSX 解析吗
-	// 那里能证明 type 是我们的 App Function，因为标签是 App 吗。
-	// 在我们的例子中，fiber.type 是 App Function，当我们 run 它的时候，将会返回 h1 element。
-	// 所以当我们得到 children 时，将会以之前的方式同样操作。
-	const children = [fiber.type(fiber.props)];
-	reconcileChildren(fiber, children);
-	// 注意，函数节点没有建立 dom 节点。
-}
-// 处理普通组件
-function updateHostComponent(fiber) {
-	if (!fiber.dom) {
-		fiber.dom = createDom(fiber);
-	}
-	const elements = fiber.props.children;
-	reconcileChildren(fiber, elements);
 }
 // 此处我们将调和 old fibers 和 新的 elements
 function reconcileChildren(wipFiber, elements) {
@@ -329,32 +342,23 @@ function reconcileChildren(wipFiber, elements) {
 		index++;
 	}
 }
-// 实现 Hooks，让我们的函数组件能够拥有状态。
+
 // ----------------------------------使用--------------------------------------
 /** @jsxRuntime classic */
 /** @jsx Didact.createElement */
-// 我们实际上要做的事
-// function App(props) {
-//   return Didact.createElement(
-//     "h1",
-//     null,
-//     "Hi ",
-//     props.name
-//   )
-// }
-function App(props) {
-	return (
+const container = document.getElementById('root');
+const updateValue = e => {
+	reRender(e.target.value);
+};
+const reRender = value => {
+	// 但不知道如何使用 Babel 用 jsx todo
+	// 要加 jsxRuntime classic
+	const element = (
 		<div>
-			<h1>Hi {props.name}</h1>
-			<h1>Hi {props.name}</h1>
-			<h1>Hi {props.name}</h1>
+			<input onInput={updateValue} value={value}></input>
+			<h2>Hello {value}</h2>
 		</div>
 	);
-}
-// 我们实际上要做的事
-// const element = Didact.createElement(App, {
-//   name: "foo",
-// })
-const element = <App name="foo" />;
-const container = document.getElementById('root');
-Didact.render(element, container);
+	Didact.render(element, container);
+};
+reRender('world');
