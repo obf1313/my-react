@@ -44,7 +44,7 @@ function createTextElement(text) {
 
 // 但如果我们还想使用 JSX 怎么办？
 // 使用这样的注解就可以告诉 babel 我们这里用了 JSX，当 babel 翻译 JSX 的时候就会用我们定义的函数了。
-/** @jsx Didact.createElement **/
+// /** @jsx Didact.createElement */
 // const element = (
 // 	<div id="foo">
 // 		<a>bar</a>
@@ -291,6 +291,7 @@ function useState(initial) {
 	const setState = action => {
 		// 我们将 action push 进 hook.queue 中。
 		hook.queue.push(action);
+		console.log(hook.queue);
 		// 然后我们做一些在 render 中做的相同的事情
 		// 设置一个新的 work 在 progress root 作为下一个工作单元
 		// 所以 work loop 可以开始一次新的渲染阶段
@@ -302,6 +303,7 @@ function useState(initial) {
 		nextUnitOfWork = wipRoot;
 		deletions = [];
 	};
+	// 可能有多个 hook
 	wipFiber.hooks.push(hook);
 	hookIndex++;
 	// 然后我们将新的 hook 添加到 fiber 中，将 hookIndex 加 1，然后返回 state。
@@ -380,9 +382,16 @@ function reconcileChildren(wipFiber, elements) {
 /** @jsx Didact.createElement */
 function Counter() {
 	const [state, setState] = Didact.useState(1);
+	const [aa, setAA] = Didact.useState(1);
 	return (
 		<h1 onClick={() => setState(c => c + 1)}>
+			<button onClick={() => {
+				setAA(a => a + 'a');
+				setAA(a => a + 'a');
+				setAA(a => a + 'a');
+			}}>+a</button>
 			Count: { state }
+			Test: { aa }
 		</h1>
 	)
 }

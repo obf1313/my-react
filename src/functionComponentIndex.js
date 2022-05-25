@@ -158,7 +158,6 @@ function updateDom(dom, prevProps, nextProps) {
 function commitRoot() {
 	// 这里是为啥啊？是因为被删除了，所以 wipRoot 里就没有这个节点了。
 	deletions.forEach(commitWork);
-	// 这个不就足够了吗？
 	commitWork(wipRoot.child);
 	currentRoot = wipRoot;
 	wipRoot = null;

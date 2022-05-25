@@ -287,10 +287,8 @@ function performUnitOfWork(fiber) {
 function reconcileChildren(wipFiber, elements) {
 	let index = 0;
 	let oldFiber = wipFiber.alternate && wipFiber.alternate.child;
-	let prevSibling = null;
 	// 上一个孩子的兄弟
-	// let prevSibling = null;
-	// while (index < elements.length) {
+	let prevSibling = null;
 	while (index < elements.length || oldFiber != null) {
 		// 我们需要比较 old fibers 和 elements 之间改变
 		const element = elements[index];
