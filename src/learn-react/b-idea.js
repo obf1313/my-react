@@ -38,7 +38,7 @@
  * 通过 React 提供的 ReactDOM.createRoot(root).render(node)，开启 Concurrent Mode。
  * 此时我们的长任务被拆分到每一帧不同的 task 中，JS 脚本执行时间大体在 5ms 左右。
  * 这样浏览器就有剩余时间执行样式布局和样式绘制，减少掉帧的可能性。 todo 因为我用不了这个方法所以无法测试。
- * 但是在我看 React 18+ 新特性时开启并发并不会直接这样，需要使用 useTransition / useDeferredValue。
+ * 但是在我看 React 18+ 新特性时开启并发并不会直接这样，需要配合并发特性使用 useTransition / useDeferredValue。
  * 所以，解决 CPU 瓶颈的关键是实现时间切片，而时间切片的关键是：将同步的更新变为可中断的异步更新。
  **/
 function App() {
@@ -51,8 +51,8 @@ function App() {
 }
 export default App;
 
+// IO 的瓶颈
 /**
- * IO 的瓶颈
  * 网络延迟是前端开发者无法解决的。如何在网络延迟客观存在的情况下，减少用户对网络延迟的感知？
  * React 给出的答案是将人机交互研究的结果整合到真实的 UI 中。
  * https://17.reactjs.org/docs/concurrent-mode-intro.html#putting-research-into-production

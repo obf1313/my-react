@@ -10,7 +10,7 @@ import { useState } from 'react';
  * scheduler 与平台无关
  * 优先级队列，用到的数据结构是“小顶堆”
  * 需要了解浏览器渲染原理，需要了解宏任务微任务区别（用到的 API 是 MessageChannel）
- * MessageChannel: MessageChannel 接口允许我们创建一个新的消息通道，并通过它的两个 MessagePort 属性发送数据。
+ * MessageChannel: 该接口允许我们创建一个新的消息通道，并通过它的两个 MessagePort 属性发送数据（高程工作者线程 802 页有讲）。
  * 优先级模型：lane 模型，调度更新优先级，需要了解 二进制掩码。
  **/
 /**
