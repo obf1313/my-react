@@ -28,49 +28,49 @@
  * https://github.com/facebook/react/blob/1fb18e22ae66fdb1dc127347e169e73948778e5a/packages/react-reconciler/src/ReactFiber.new.js#L117
  * 虽然属性很多，但我们可以按三层含义将他们分类来看：
  **/
-function FiberNode(
-	tag: WorkTag,
-	pendingProps: mixed,
-	key: null | string,
-	mode: TypeOfMode
-) {
-	// 作为静态数据结构的属性
-	this.tag = tag; // Fiber 对应组件的类型 Function/Class/Host...
-	this.key = key; // key 属性，有助于渲染？
-	this.elementType = null; // 大部分情况同 type，某些情况不同，比如 FunctionComponent 使用 React.memo 包裹。
-	this.type = null; // 对于 FunctionComponent，指函数本身，对于 ClassComponent，指 class，对于 HostComponent，指 DOM 节点 tagName。
-	this.stateNode = null; // Fiber 对应的真实 DOM 节点。
-
-	// 用于连接其他 Fiber 节点形成 Fiber 树
-	// 为什么父级指针叫做 return 而不是 parent 或者 father 呢？
-	// 因为作为一个工作单元，return 指节点执行完 completeWork（本章后面会介绍）后会返回的下一个节点。
-	// 子 Fiber 节点及其兄弟节点完成工作后会返回其父级节点，所以用 return 指代父级节点。
-	this.return = null; // 父级 Fiber 节点
-	this.child = null; // 子节点
-	this.sibling = null; // 右边第一个兄弟节点
-	this.index = 0; // ?
-	this.ref = null; // dom 结构？
-
-	// 作为动态的工作单元的属性
-	this.pendingProps = pendingProps; // ?
-	this.memoizedProps = null; // ?
-	this.updateQueue = null; // ?
-	this.memoizedState = null; // ?
-	this.dependencies = null; // ?
-	this.mode = mode; // ?
-	this.effectYag = null; // ?
-	this.nextEffect = null; // ?
-	this.firstEffect = null; // ?
-	this.lastEffect = null; // ?
-
-	// 调度优先级相关
-	// 如下两个字段保存调度优先级相关的信息，会在讲解 Scheduler 时介绍。todo callback
-	this.lanes = NoLanes; // ?
-	this.childLanes = NoLanes; // ?
-
-	// 指向该 fiber 在上一个更新时对应的 fiber
-	this.alternate = null;
-}
+// function FiberNode(
+// 	tag: WorkTag,
+// 	pendingProps: mixed,
+// 	key: null | string,
+// 	mode: TypeOfMode
+// ) {
+// 	// 作为静态数据结构的属性
+// 	this.tag = tag; // Fiber 对应组件的类型 Function/Class/Host...
+// 	this.key = key; // key 属性，有助于渲染？
+// 	this.elementType = null; // 大部分情况同 type，某些情况不同，比如 FunctionComponent 使用 React.memo 包裹。
+// 	this.type = null; // 对于 FunctionComponent，指函数本身，对于 ClassComponent，指 class，对于 HostComponent，指 DOM 节点 tagName。
+// 	this.stateNode = null; // Fiber 对应的真实 DOM 节点。
+//
+// 	// 用于连接其他 Fiber 节点形成 Fiber 树
+// 	// 为什么父级指针叫做 return 而不是 parent 或者 father 呢？
+// 	// 因为作为一个工作单元，return 指节点执行完 completeWork（本章后面会介绍）后会返回的下一个节点。
+// 	// 子 Fiber 节点及其兄弟节点完成工作后会返回其父级节点，所以用 return 指代父级节点。
+// 	this.return = null; // 父级 Fiber 节点
+// 	this.child = null; // 子节点
+// 	this.sibling = null; // 右边第一个兄弟节点
+// 	this.index = 0; // ?
+// 	this.ref = null; // dom 结构？
+//
+// 	// 作为动态的工作单元的属性
+// 	this.pendingProps = pendingProps; // ?
+// 	this.memoizedProps = null; // ?
+// 	this.updateQueue = null; // ?
+// 	this.memoizedState = null; // ?
+// 	this.dependencies = null; // ?
+// 	this.mode = mode; // ?
+// 	this.effectYag = null; // ?
+// 	this.nextEffect = null; // ?
+// 	this.firstEffect = null; // ?
+// 	this.lastEffect = null; // ?
+//
+// 	// 调度优先级相关
+// 	// 如下两个字段保存调度优先级相关的信息，会在讲解 Scheduler 时介绍。todo callback
+// 	this.lanes = NoLanes; // ?
+// 	this.childLanes = NoLanes; // ?
+//
+// 	// 指向该 fiber 在上一个更新时对应的 fiber
+// 	this.alternate = null;
+// }
 
 // 作为架构来说
 /**

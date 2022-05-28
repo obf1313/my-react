@@ -8,7 +8,8 @@ import ReactDOM from 'react-dom';
 // import App from './learn-react/a-conception';
 // import App from './learn-react/b-idea';
 // import App from './learn-react/c-old';
-import App from './learn-react/d-new';
+// import App from './learn-react/d-new';
+import App from './learn-react/g-fiber-work';
 
 const root = document.getElementById('root');
 
