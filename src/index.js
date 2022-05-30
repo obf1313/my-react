@@ -10,6 +10,7 @@ import ReactDOM from 'react-dom';
 // import App from './learn-react/c-old';
 // import App from './learn-react/d-new';
 import App from './learn-react/g-fiber-work';
+import { AppClass } from './learn-react/h-jsx';
 
 const root = document.getElementById('root');
 
